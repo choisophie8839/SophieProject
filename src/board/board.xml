@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+ <mapper namespace="Board">
+ 	<select id="getCount" resultType="int" parameterType="int">
+ 		select count(*) from eh_board where re_type=#{re_type}
+ 	</select>
+ 	<select id="maxNum" resultType="int">
+ 		select max( num ) from eh_board
+ 	</select>
+	<insert id="insertArticle" parameterType="board.BoardDataBean">
+		<selectKey resultType="int" keyProperty="num" order="AFTER">
+			select SEQ_EH_BOARD_NUM.currval from dual
+		</selectKey>
+		insert into eh_board (num, id, subject, re_f, re_step, re_level, re_type, content, score, readcount, reg_date, movienm)
+		values (SEQ_EH_BOARD_NUM.NEXTVAL, #{id}, #{subject, jdbcType=VARCHAR}, #{re_f}, #{re_step}, #{re_level}, #{re_type}, #{content}, #{score, jdbcType=NUMERIC}, #{readcount, jdbcType=NUMERIC}, #{reg_date}, #{movienm})
+	</insert>
+	<update id="modifyArticle" parameterType="board.BoardDataBean">
+		<selectKey resultType="int" keyProperty="num" order="AFTER">
+			select num from eh_board where num=#{num}
+		</selectKey>
+		update eh_board set subject=#{subject, jdbcType=VARCHAR}, content=#{content}, score=#{score, jdbcType=NUMERIC}, movienm=#{movienm} where num=#{num}
+	</update>
+	<insert id="insertFiles" parameterType="java.util.Map">
+		<foreach item="fileDto" collection="fileDtos" index="index" open="INSERT ALL " separator=" " close="SELECT * FROM DUAL">
+		into eh_file values
+		(#{num}, #{fileDto.org_filenm}, #{fileDto.std_filenm}, #{filereg_date})
+		</foreach>
+	</insert>
+	<update id="insertReply" parameterType="board.BoardDataBean">
+  		update eh_board set re_step=re_step+1 where re_f=#{re_f} and re_step>#{re_step}	
+ 	</update>
+ 	<select id="getArticles" parameterType="java.util.Map" resultType="board.BoardDataBean">
+		select num, id, subject, re_f, re_step, re_level, re_type, content, score, readcount, reg_date, movienm, re_type
+		from (select num, id, subject, re_f, re_step, re_level, re_type, content, score, readcount, reg_date, movienm, rownum r 
+		from (select num, id, subject, re_f, re_step, re_level, re_type, content, score, readcount, reg_date, movienm
+		from eh_board where re_type=#{re_type} order by re_f desc, re_step asc) where re_type=#{re_type} order by re_f desc, re_step asc)
+		where re_type=#{re_type} and r &gt;= #{start} and r &lt;= #{end}
+ 	</select>
+  	<select id="getArticle" parameterType="int" resultType="board.BoardDataBean">
+ 		select * from eh_board where num=#{num}
+ 	</select>
+ 	<delete id="deleteArticle" parameterType="int">
+ 		delete from eh_board where num=#{num}
+ 	</delete>
+ 		<update id="addCount" parameterType="int">
+		update eh_board set readcount=readcount+1 where num=#{num}
+	</update>
+	<select id="checkFiles" parameterType="int" resultType="board.FileDataBean">
+		select * from eh_file where num=#{num}
+	</select>
+	<select id="checkReply" parameterType="board.BoardDataBean" resultType="int">
+		select count(*) from eh_board where re_f=#{re_f} and re_step=#{re_step}+1 and re_level>#{re_level}
+	</select>
+	<update id="deleteReply" parameterType="board.BoardDataBean">
+		update eh_board set re_step=re_step-1 where re_f=#{re_f} and re_step>#{re_step}
+	</update>
+	<delete id="deleteFiles" parameterType="int">
+		delete from eh_file where num=#{num}
+	</delete>
+	<select id="countComment" parameterType="java.util.Map" resultType="int">
+		select count(*) from eh_board where re_f=#{re_f} and re_step=#{re_step} and re_type=#{re_type}
+	</select>
+	<insert id="insertComment" parameterType="board.BoardDataBean">
+		insert into eh_board (num, id, re_f, re_step, re_level, re_type, content, reg_date, movienm)
+		values (SEQ_EH_BOARD_NUM.NEXTVAL, #{id}, #{re_f}, #{re_step}, #{re_level}, #{re_type}, #{content}, #{reg_date}, #{movienm})
+	</insert>
+	<select id="showComments" parameterType="java.util.Map" resultType="board.BoardDataBean">
+		select * from eh_board where re_f=#{re_f} and re_step=#{re_step} and re_type=#{re_type} order by re_level asc
+	</select>
+	<select id="maxLevel" parameterType="java.util.Map" resultType="int">
+		select max(re_level) from eh_board where re_f=#{re_f} and re_step=#{re_step} and re_type=#{re_type}
+	</select>
+	<update id="arrangeComments" parameterType="java.util.Map">
+		update eh_board set re_level=re_level-1 where re_f=#{re_f} and re_step=#{re_step} and re_level>#{re_level} and re_type=#{re_type}
+	</update>
+	<delete id="deleteComments" parameterType="int">
+		delete from eh_board where num=#{num}
+	</delete>
+	<update id="modifyComment" parameterType="board.BoardDataBean">
+		update eh_board set content=#{content}, reg_date=#{reg_date} where num=#{num} and re_type=#{re_type}
+	</update>
+	<delete id="deleteAllComments" parameterType="java.util.Map">
+		delete from eh_board where re_f=#{re_f} and re_step=#{re_step} and re_type=#{re_type}
+	</delete>
+ </mapper>
+ 

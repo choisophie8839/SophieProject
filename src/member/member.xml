@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+ <mapper namespace="Member">
+	<insert id="insertMember" parameterType="member.LogonDataBean">
+		insert into eh_member values( #{id}, #{passwd}, #{email}, #{tel, jdbcType=VARCHAR}, #{birth}, #{gender}, #{address1}, #{address2, jdbcType=VARCHAR}, #{reg_date})
+	</insert>
+	<select id="checkId" parameterType="String" resultType="int">
+		select count(*) from eh_member where id=#{id}
+	</select>
+	<select id="getMember" parameterType="String" resultType="member.LogonDataBean">
+		select * from eh_member where id=#{id}
+	</select>
+	<update id="modifyMember" parameterType="member.LogonDataBean">
+		update eh_member set passwd=#{passwd}, email=#{email}, tel=#{tel, jdbcType=VARCHAR}, address1=#{address1}, address2=#{address2, jdbcType=VARCHAR} where id=#{id}
+	</update>
+	<delete id="deleteMember" parameterType="String">
+		delete from eh_member where id=#{id}
+	</delete>
+ </mapper>
